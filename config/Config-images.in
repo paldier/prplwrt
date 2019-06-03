@@ -286,4 +286,10 @@ menu "Target Images"
 		  it will be mounted by PARTUUID which makes the kernel find the
 		  appropriate disk automatically.
 
+	config TARGET_ROOTFS_INCLUDE_FOLDER
+		string "RootFS include folder"
+		default "files"
+		help
+		  Override the folder that is included into the RootFS by default.
+
 endmenu
