@@ -32,6 +32,10 @@ ifneq ($(IGNORE_ERRORS),)
   $(curdir)/builddirs-ignore-host-compile := $(package-ignore-subdirs)
 endif
 
+ifeq ($(CONFIG_TARGET_ROOTFS_INCLUDE_FOLDER),"")
+CONFIG_TARGET_ROOTFS_INCLUDE_FOLDER:=files
+endif
+
 PACKAGE_INSTALL_FILES:= \
 	$(foreach pkg,$(sort $(package-y)), \
 		$(foreach variant, \
@@ -75,8 +79,7 @@ $(curdir)/install: $(TMP_DIR)/.build $(curdir)/merge $(if $(CONFIG_TARGET_PER_DE
 	done || true
 
 	$(CP) $(TARGET_DIR) $(TARGET_DIR_ORIG)
-
-	$(call prepare_rootfs,$(TARGET_DIR),$(TOPDIR)/files)
+	$(call prepare_rootfs,$(TARGET_DIR),$(TOPDIR)/$(call qstrip, $(CONFIG_TARGET_ROOTFS_INCLUDE_FOLDER)))
 
 $(curdir)/index: FORCE
 	@echo Generating package index...
