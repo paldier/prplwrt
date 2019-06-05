@@ -29,6 +29,8 @@ HOST_BUILD_DIR:=$(BUILD_DIR_TOOLCHAIN)/$(GDB_DIR)
 
 HOST_BUILD_PARALLEL:=1
 
+include $(wildcard $(TOPDIR)/toolchain_custom/gdb/*.var)
+
 include $(INCLUDE_DIR)/toolchain-build.mk
 
 HOST_CONFIGURE_VARS += \
@@ -64,5 +66,7 @@ define Host/Clean
 		$(TOOLCHAIN_DIR)/bin/$(TARGET_CROSS)gdb \
 		$(TOOLCHAIN_DIR)/bin/$(GNU_TARGET_NAME)-gdb
 endef
+
+include $(wildcard $(TOPDIR)/toolchain_custom/gdb/*.build)
 
 $(eval $(call HostBuild))

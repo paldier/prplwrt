@@ -25,6 +25,8 @@ BUILD_DIR_HOST:=$(BUILD_DIR_TOOLCHAIN)
 HOST_BUILD_PREFIX:=$(TOOLCHAIN_DIR)
 HOST_BUILD_DIR:=$(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)-$(PKG_VERSION)
 
+include $(wildcard $(TOPDIR)/toolchain_custom/musl/*.var)
+
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/hardening.mk
 

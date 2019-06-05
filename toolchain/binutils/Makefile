@@ -31,6 +31,8 @@ HOST_BUILD_PARALLEL:=1
 
 PATCH_DIR:=./patches/$(PKG_VERSION)
 
+include $(wildcard $(TOPDIR)/toolchain_custom/binutils/*.var)
+
 include $(INCLUDE_DIR)/toolchain-build.mk
 
 HOST_CONFIGURE_ARGS = \
@@ -98,5 +100,7 @@ define Host/Clean
 		$(HOST_BUILD_DIR) \
 		$(BUILD_DIR_TOOLCHAIN)/$(PKG_NAME)
 endef
+
+include $(wildcard $(TOPDIR)/toolchain_custom/binutils/*.build)
 
 $(eval $(call HostBuild))

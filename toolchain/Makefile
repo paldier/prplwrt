@@ -93,6 +93,8 @@ endif
 
 $(curdir)/install: $(curdir)/compile
 
+include $(wildcard toolchain_custom/*.mk)
+
 $(eval $(call stampfile,$(curdir),toolchain,compile,$(TOOLCHAIN_DIR)/stamp/.gcc-initial_installed,,$(TOOLCHAIN_DIR)))
 $(eval $(call stampfile,$(curdir),toolchain,check,$(TMP_DIR)/.build))
 $(eval $(call subdir,$(curdir)))

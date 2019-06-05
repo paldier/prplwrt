@@ -155,6 +155,11 @@ menuconfig EXTERNAL_TOOLCHAIN
 		  Specify additional directories searched for libraries (override LDFLAGS).
 		  Use ./DIR for directories relative to the root above.
 
+config CUSTOM_TOOLCHAIN
+	depends on DEVEL
+
+source "toolchain_custom/*.in"
+
 config NEED_TOOLCHAIN
 	bool
 	depends on DEVEL
