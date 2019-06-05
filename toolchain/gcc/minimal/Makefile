@@ -1,6 +1,8 @@
 GCC_VARIANT:=minimal
 GCC_PREPARE=$(if $(CONFIG_USE_MUSL),,1)
 
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/minimal/*.var)
+
 include ../common.mk
 
 GCC_CONFIGURE += \
@@ -25,5 +27,7 @@ define Host/Clean
 		$(HOST_BUILD_DIR) \
 		$(GCC_BUILD_DIR)
 endef
+
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/minimal/*.build)
 
 $(eval $(call HostBuild))

@@ -47,6 +47,8 @@ PKGVERSION=OpenWrt GCC $(PKG_VERSION) $(REVISION)
 
 HOST_BUILD_PARALLEL:=1
 
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/*.var)
+
 include $(INCLUDE_DIR)/toolchain-build.mk
 
 HOST_SOURCE_DIR:=$(HOST_BUILD_DIR)
@@ -229,3 +231,5 @@ define Host/Clean
 		$(TOOLCHAIN_DIR)/bin/$(REAL_GNU_TARGET_NAME)-gc* \
 		$(TOOLCHAIN_DIR)/bin/$(REAL_GNU_TARGET_NAME)-c*
 endef
+
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/*.build)
