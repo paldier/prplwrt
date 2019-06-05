@@ -1,6 +1,8 @@
 GCC_VARIANT:=initial
 GCC_PREPARE=$(CONFIG_USE_MUSL)
 
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/initial/*.var)
+
 include ../common.mk
 
 GCC_CONFIGURE += \
@@ -32,5 +34,7 @@ define Host/Install
 	$(call FixupLibdir,$(TOOLCHAIN_DIR)/initial)
 	$$(call file_copy,$(TOOLCHAIN_DIR)/initial/.,$(TOOLCHAIN_DIR)/)
 endef
+
+include $(wildcard $(TOPDIR)/toolchain_custom/gcc/initial/*.build)
 
 $(eval $(call HostBuild))

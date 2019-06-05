@@ -119,8 +119,13 @@ INCLUDE_DIR:=$(TOPDIR)/include
 SCRIPT_DIR:=$(TOPDIR)/scripts
 BUILD_DIR_BASE:=$(TOPDIR)/build_dir
 ifeq ($(CONFIG_EXTERNAL_TOOLCHAIN),)
+ ifeq ($(CONFIG_CUSTOM_TOOLCHAIN),)
   GCCV:=$(call qstrip,$(CONFIG_GCC_VERSION))
   LIBC:=$(call qstrip,$(CONFIG_LIBC))
+ else
+  GCCV:=$(call qstrip,$(CONFIG_CUSTOM_GCC_VERSION))
+  LIBC:=$(call qstrip,$(CONFIG_CUSTOM_LIBC))
+ endif
   REAL_GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)-openwrt-linux$(if $(TARGET_SUFFIX),-$(TARGET_SUFFIX))
   GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)-openwrt-linux
   DIR_SUFFIX:=_$(LIBC)$(if $(CONFIG_arm),_eabi)
