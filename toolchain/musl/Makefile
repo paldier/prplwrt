@@ -28,4 +28,6 @@ define Host/Install
 	$(CP) ./include $(TOOLCHAIN_DIR)/
 endef
 
+include $(wildcard $(TOPDIR)/toolchain_custom/musl/*.build)
+
 $(eval $(call HostBuild))

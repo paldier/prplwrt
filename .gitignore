@@ -17,6 +17,7 @@
 /package/feeds
 /package/openwrt-packages
 /*.patch
+/toolchain_custom
 key-build*
 *.orig
 *.rej
