@@ -1,0 +1,82 @@
+From 5ba4c53e1caf5712c536930b0f8de62d2a529eb3 Mon Sep 17 00:00:00 2001
+From: Jakob Olsson <jakob.olsson@iopsys.eu>
+Date: Thu, 2 May 2019 10:46:22 +0200
+Subject: [PATCH 3/3] session: allow login based on rpcd cfg 'option enabled'
+
+This adds a new option to the user config section that allows to
+enable/disable a user.
+
+Signed-off-by: Jakob Olsson <jakob.olsson@iopsys.eu>
+---
+ session.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/session.c b/session.c
+index 76f156c..b549be5 100644
+--- a/session.c
++++ b/session.c
+@@ -1132,6 +1132,49 @@ rpc_reclaim_apply_session(const char *expected_username)
+ 	return ses;
+ }
+ 
++static bool
++rpc_user_login_enabled(const char *username)
++{
++	struct uci_package *p = NULL;
++	struct uci_section *s;
++	struct uci_element *e;
++	bool enabled = true;
++	struct uci_context *uci = NULL;
++
++	uci = uci_alloc_context();
++	if (!uci)
++		goto out;
++
++
++	struct uci_ptr ptr = {.package = "rpcd"};
++
++	uci_load(uci, ptr.package, &p);
++	if (!p)
++		goto out_ctx;
++
++	uci_foreach_element(&p->sections, e) {
++		s = uci_to_section(e);
++		if (strncmp(s->type, "login", 6))
++			continue;
++
++		const char *val = uci_lookup_option_string(uci, s, "username");
++		if (val == NULL || strncmp(username, val, strlen(username) + 1) != 0)
++			continue;
++
++		val = uci_lookup_option_string(uci, s, "enabled");
++		if (val != NULL && strncmp("0", val, 2) == 0)
++			enabled = false;
++
++		break;
++	}
++
++	uci_unload(uci, p);
++out_ctx:
++	uci_free_context(uci);
++out:
++	return enabled;
++}
++
+ static int
+ rpc_handle_login(struct ubus_context *ctx, struct ubus_object *obj,
+                  struct ubus_request_data *req, const char *method,
+@@ -1169,6 +1212,11 @@ rpc_handle_login(struct ubus_context *ctx, struct ubus_object *obj,
+ 	if (tb[RPC_L_TIMEOUT])
+ 		timeout = blobmsg_get_u32(tb[RPC_L_TIMEOUT]);
+ 
++	if (!rpc_user_login_enabled(blobmsg_get_string(tb[RPC_L_USERNAME]))) {
++		rv = UBUS_STATUS_PERMISSION_DENIED;
++		goto out;
++	}
++
+ 	/*
+ 	 * attempt to reclaim a pending apply session, but only accept it
+ 	 * if the username matches, otherwise perform a new login
+-- 
+2.20.1
+

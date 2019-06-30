@@ -1,0 +1,394 @@
+From 5158dc5b99c635b1443763f9dc222572bb9b2e22 Mon Sep 17 00:00:00 2001
+From: Matija Amidzic <matija.amidzic@sartura.hr>
+Date: Wed, 26 Jun 2019 09:09:05 +0200
+Subject: [PATCH 1/3] add login guard support
+
+This patch adds brute-force protection.
+
+Signed-off-by: Matija Amidzic <matija.amidzic@sartura.hr>
+---
+ CMakeLists.txt             |   2 +-
+ include/rpcd/login_guard.h |  31 ++++
+ login_guard.c              | 280 +++++++++++++++++++++++++++++++++++++
+ session.c                  |  11 +-
+ 4 files changed, 322 insertions(+), 2 deletions(-)
+ create mode 100644 include/rpcd/login_guard.h
+ create mode 100644 login_guard.c
+
+Index: rpcd-2019-06-05-89bfaa42/include/rpcd/login_guard.h
+===================================================================
+--- /dev/null
++++ rpcd-2019-06-05-89bfaa42/include/rpcd/login_guard.h
+@@ -0,0 +1,31 @@
++/*
++ * RPC login guard mechanism
++ *
++ * Copyright (C) 2019 IOPSYS
++ *
++ * Author: Matija Amidzic <matija.amidzic@sartura.hr>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RPC_LOGIN_GUARD_H
++#define __RPC_LOGIN_GUARD_H
++
++#include <stdbool.h>
++
++void login_guard_init();
++bool login_guard_is_locked(const char *username);
++void login_guard_add_attempt(const char *username);
++void login_guard_remove_attempt(const char *username);
++
++#endif //!__RPC_LOGIN_GUARD_H
+Index: rpcd-2019-06-05-89bfaa42/login_guard.c
+===================================================================
+--- /dev/null
++++ rpcd-2019-06-05-89bfaa42/login_guard.c
+@@ -0,0 +1,279 @@
++/*
++ * RPC login guard mechanism
++ *
++ * Copyright (C) 2019 IOPSYS
++ *
++ * Author: Matija Amidzic <matija.amidzic@sartura.hr>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <syslog.h>
++#include <libubox/avl.h>
++#include <libubox/avl-cmp.h>
++#include <libubox/uloop.h>
++#include <uci.h>
++#include <string.h>
++#include <stdlib.h>
++
++#include <rpcd/login_guard.h>
++
++#define CONFIG_GUARD "brute-force"
++#define CONFIG_MAX_ATTEMPTS "max_incorrect_attempts"
++#define CONFIG_MAX_TIME_BEFORE_LOCK "max_time_before_locking"
++#define CONFIG_LOCK_DURATION "account_lock_duration"
++
++struct login_guard_s {
++	struct avl_tree login_attempts;
++
++	int max_attempts;
++	int max_time_before_lock;
++	int lock_duration;
++
++	bool enabled;
++};
++
++struct login_attempt_ctx {
++	struct avl_node avl;
++
++	struct uloop_timeout lock_timer;
++	struct uloop_timeout unlock_timer;
++
++	bool is_locked;
++	int incorrect_attempts;
++};
++static struct login_attempt_ctx *login_guard_find_attempt(const char *username);
++static void login_guard_lock_timeout(struct uloop_timeout *t);
++static void login_guard_unlock_timeout(struct uloop_timeout *t);
++static struct login_attempt_ctx *login_guard_create_attempt(const char *username);
++static void login_guard_delete_attempt(struct login_attempt_ctx *login_attempt);
++
++static struct login_guard_s login_guard = {0};
++
++static struct login_attempt_ctx *login_guard_find_attempt(const char *username)
++{
++	struct login_attempt_ctx *attempt = NULL;
++	struct login_attempt_ctx *temp = NULL;
++
++	avl_for_each_element(&login_guard.login_attempts, temp, avl) {
++		if (strcmp(temp->avl.key, username) == 0) {
++			attempt = temp;
++			/* we found the attempt, break */
++			break;
++		}
++	}
++	return attempt;
++}
++
++static void login_guard_lock_timeout(struct uloop_timeout *t)
++{
++	struct login_attempt_ctx *login_attempt;
++
++	login_attempt = container_of(t, struct login_attempt_ctx, lock_timer);
++	login_attempt->incorrect_attempts = 0;
++}
++
++static void login_guard_unlock_timeout(struct uloop_timeout *t)
++{
++	struct login_attempt_ctx *login_attempt;
++
++	login_attempt = container_of(t, struct login_attempt_ctx, unlock_timer);
++	login_guard_delete_attempt(login_attempt);
++}
++
++static struct login_attempt_ctx *login_guard_create_attempt(const char *username)
++{
++	struct login_attempt_ctx *attempt;
++
++	attempt = calloc(1, sizeof(*attempt));
++	if (attempt == NULL) {
++		return NULL;
++	}
++
++	attempt->lock_timer.cb = login_guard_lock_timeout;
++	attempt->unlock_timer.cb = login_guard_unlock_timeout;
++	attempt->avl.key = strdup(username);
++
++	if (attempt->avl.key == NULL) {
++		free(attempt);
++		return NULL;
++	}
++	avl_insert(&login_guard.login_attempts, &attempt->avl);
++	return attempt;
++}
++
++static void login_guard_delete_attempt(struct login_attempt_ctx *attempt)
++{
++	avl_delete(&login_guard.login_attempts, &attempt->avl);
++	uloop_timeout_cancel(&attempt->lock_timer);
++	uloop_timeout_cancel(&attempt->unlock_timer);
++	free((void *) attempt->avl.key);
++	free(attempt);
++}
++
++bool login_guard_is_locked(const char *username)
++{
++	struct login_attempt_ctx *attempt;
++
++	if (!login_guard.enabled)
++		return false;
++
++	attempt = login_guard_find_attempt(username);
++	if (attempt != NULL) {
++		if (attempt->is_locked) {
++			int remaining_time = uloop_timeout_remaining(&attempt->unlock_timer);
++			syslog(LOG_NOTICE, "user account '%s' locked for %d seconds", username, remaining_time / 1000);
++			return true;
++		} else {
++			return false;
++		}
++	}
++	return false;
++}
++
++void login_guard_add_attempt(const char *username) {
++	struct login_attempt_ctx *attempt;
++
++	if (!login_guard.enabled)
++		return;
++
++	attempt = login_guard_find_attempt(username);
++
++	syslog(LOG_NOTICE, "failed login attempt for user: %s", username);
++	if (attempt == NULL) {
++		/* create new attempt */
++		attempt = login_guard_create_attempt(username);
++		if (attempt == NULL) {
++			syslog(LOG_ERR, "memory allocation failed");
++			return;
++		}
++		attempt->incorrect_attempts++;
++		uloop_timeout_set(&attempt->lock_timer, login_guard.max_time_before_lock * 1000);
++	} else {
++		/* increment attempt */
++		if (attempt->incorrect_attempts == 0) {
++			uloop_timeout_set(&attempt->lock_timer, login_guard.max_time_before_lock * 1000);
++		}
++		attempt->incorrect_attempts++;
++		if (attempt->incorrect_attempts >= login_guard.max_attempts) {
++			/* lock account */
++			attempt->is_locked = true;
++			uloop_timeout_set(&attempt->unlock_timer, login_guard.lock_duration * 1000);
++		}
++	}
++}
++
++void login_guard_remove_attempt(const char *username)
++{
++	struct login_attempt_ctx *attempt;
++
++	if (!login_guard.enabled)
++		return;
++
++	syslog(LOG_NOTICE, "successful login for user: %s", username);
++	attempt = login_guard_find_attempt(username);
++	if (attempt != NULL) {
++		login_guard_delete_attempt(attempt);
++	}
++}
++
++void login_guard_init()
++{
++	struct uci_context *uci = NULL;
++	struct uci_package *p = NULL;
++	struct uci_section *s;
++	struct uci_element *e;
++	struct uci_ptr ptr = { .package = "rpcd" };
++
++	uci = uci_alloc_context();
++
++	if (!uci) {
++		goto out;
++	}
++
++	uci_load(uci, ptr.package, &p);
++
++	if (!p)
++		goto out;
++
++	uci_foreach_element(&p->sections, e)
++	{
++		s = uci_to_section(e);
++
++		if (strcmp(s->type, CONFIG_GUARD))
++			continue;
++
++		ptr.section = s->e.name;
++		ptr.s = NULL;
++
++		/* max_incorrrect_attempts parse */
++		ptr.option = CONFIG_MAX_ATTEMPTS;
++		ptr.o = NULL;
++
++		if (uci_lookup_ptr(uci, &ptr, NULL, true))
++			continue;
++
++		if (ptr.o->type != UCI_TYPE_STRING)
++			continue;
++
++		int nr_attempts = atoi(ptr.o->v.string);
++		if (nr_attempts <= 0)
++			continue;
++
++		login_guard.max_attempts = nr_attempts;
++
++		/* max_time_before_locking parse */
++		ptr.option = CONFIG_MAX_TIME_BEFORE_LOCK;
++		ptr.o = NULL;
++
++		if (uci_lookup_ptr(uci, &ptr, NULL, true))
++			continue;
++
++		if (ptr.o->type != UCI_TYPE_STRING)
++			continue;
++
++		int max_time = atoi(ptr.o->v.string);
++		if (max_time <= 0)
++			continue;
++
++		login_guard.max_time_before_lock = max_time;
++
++		/* lock_duration parse */
++		ptr.option = CONFIG_LOCK_DURATION;
++		ptr.o = NULL;
++
++		if (uci_lookup_ptr(uci, &ptr, NULL, true))
++			continue;
++
++		if (ptr.o->type != UCI_TYPE_STRING)
++			continue;
++
++		int duration = atoi(ptr.o->v.string);
++		if (duration  <= 0)
++			continue;
++
++		login_guard.lock_duration = duration;
++
++		/* all options present, enable login guard */
++		login_guard.enabled = true;
++		avl_init(&login_guard.login_attempts, avl_strcmp, false, NULL);
++		syslog(LOG_NOTICE, "login guard enabled");
++		break;
++	}
++
++out:
++	if (uci)
++		uci_free_context(uci);
++
++	return;
++}
+Index: rpcd-2019-06-05-89bfaa42/session.c
+===================================================================
+--- rpcd-2019-06-05-89bfaa42.orig/session.c
++++ rpcd-2019-06-05-89bfaa42/session.c
+@@ -33,6 +33,7 @@
+ #endif
+ 
+ #include <rpcd/session.h>
++#include <rpcd/login_guard.h>
+ 
+ static struct avl_tree sessions;
+ static struct blob_buf buf;
+@@ -861,6 +862,8 @@ rpc_login_test_login(struct uci_context
+ 
+ 		if (strcmp(ptr.o->v.string, username))
+ 			continue;
++		if (login_guard_is_locked(username))
++			continue;
+ 
+ 		/* If password is NULL, we're restoring ACLs for an existing session,
+ 		 * in this case do not check the password again. */
+@@ -877,8 +880,12 @@ rpc_login_test_login(struct uci_context
+ 		if (ptr.o->type != UCI_TYPE_STRING)
+ 			continue;
+ 
+-		if (rpc_login_test_password(ptr.o->v.string, password))
++		if (rpc_login_test_password(ptr.o->v.string, password)) {
++			login_guard_remove_attempt(username);
+ 			return ptr.s;
++		} else {
++			login_guard_add_attempt(username);
++		}
+ 	}
+ 
+ 	return NULL;
+@@ -1346,6 +1353,8 @@ int rpc_session_api_init(struct ubus_con
+ 		avl_insert(&sessions, &ses->avl);
+ 	}
+ 
++	login_guard_init();
++
+ 	return ubus_add_object(ctx, &obj);
+ }
+ 
+Index: rpcd-2019-06-05-89bfaa42/CMakeLists.txt
+===================================================================
+--- rpcd-2019-06-05-89bfaa42.orig/CMakeLists.txt
++++ rpcd-2019-06-05-89bfaa42/CMakeLists.txt
+@@ -38,7 +38,7 @@ INCLUDE_DIRECTORIES(${ubus_include_dir})
+ FIND_PATH(ubox_include_dir libubox/blobmsg_json.h)
+ INCLUDE_DIRECTORIES(${ubox_include_dir})
+ 
+-ADD_EXECUTABLE(rpcd main.c exec.c session.c uci.c plugin.c)
++ADD_EXECUTABLE(rpcd main.c exec.c session.c uci.c plugin.c login_guard.c)
+ TARGET_LINK_LIBRARIES(rpcd ${ubox} ${ubus} ${uci} ${blobmsg_json} ${json} ${crypt} dl)
+ 
+ SET(PLUGINS "")
