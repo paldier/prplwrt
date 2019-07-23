@@ -632,6 +632,21 @@ sub refresh_config {
 	}
 }
 
+sub install_profiles {
+	my $feed = shift;
+	my $dir = sprintf('feeds/%s/', $feed->[1]);
+
+	-d "./feeds/profiles" or mkdir "./feeds/profiles" or return 1;
+
+	opendir (DIR, $dir) or return 0;
+	while (my $file = readdir(DIR)) {
+		next unless (-f "$dir/$file");
+		next unless ($file =~ m/\.profile$/);
+		-e "./feeds/profiles/$file" or system("ln -s ../$feed->[1]/$file ./feeds/profiles/");
+	}
+	closedir(DIR);
+}
+
 sub install {
 	my $name;
 	my %opts;
@@ -664,6 +679,7 @@ sub install {
 					install_src($feed, $name, exists($opts{f})) == 0 or $ret = 1;
 					get_feed($f->[1]);
 				}
+				install_profiles($f);
 			}
 		}
 	} else {
