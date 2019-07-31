@@ -1,0 +1,110 @@
+--- a/net/bridge/br_mdb.c
++++ b/net/bridge/br_mdb.c
+@@ -347,7 +347,7 @@ errout:
+ }
+ 
+ void br_mdb_notify(struct net_device *dev, struct net_bridge_port *port,
+-		   struct br_ip *group, int type, u8 flags)
++		   struct br_ip *group, int type, u8 flags, const unsigned char *src)
+ {
+ 	struct br_mdb_entry entry;
+ 
+@@ -358,6 +358,7 @@ void br_mdb_notify(struct net_device *de
+ #if IS_ENABLED(CONFIG_IPV6)
+ 	entry.addr.u.ip6 = group->u.ip6;
+ #endif
++	if (src) memcpy(&entry.src_addr.eth_addr,src,ETH_ALEN);
+ 	entry.vid = group->vid;
+ 	__mdb_entry_fill_flags(&entry, flags);
+ 	__br_mdb_notify(dev, port, &entry, type);
+--- a/net/bridge/br_multicast.c
++++ b/net/bridge/br_multicast.c
+@@ -285,8 +285,9 @@ static void br_multicast_del_pg(struct n
+ 		rcu_assign_pointer(*pp, p->next);
+ 		hlist_del_init(&p->mglist);
+ 		del_timer(&p->timer);
++		memcpy(mp->addr.src, pg->addr.src, ETH_ALEN);
+ 		br_mdb_notify(br->dev, p->port, &pg->addr, RTM_DELMDB,
+-			      p->flags);
++			      p->flags, pg->addr.src);
+ 		call_rcu_bh(&p->rcu, br_multicast_free_pg);
+ 
+ 		if (!mp->ports && !mp->mglist &&
+@@ -669,6 +670,8 @@ struct net_bridge_port_group *br_multica
+ 	if (unlikely(!p))
+ 		return NULL;
+ 
++	if (src) memcpy(group->src, src, ETH_ALEN);
++	if (src) memcpy(p->eth_addr, src, ETH_ALEN);
+ 	p->addr = *group;
+ 	p->port = port;
+ 	p->flags = flags;
+@@ -680,6 +683,8 @@ struct net_bridge_port_group *br_multica
+ 	if ((port->flags & BR_MULTICAST_TO_UNICAST) && src) {
+ 		memcpy(p->eth_addr, src, ETH_ALEN);
+ 		p->flags |= MDB_PG_FLAGS_MCAST_TO_UCAST;
++	} else {
++		if(src) memcpy(p->eth_addr, src, ETH_ALEN);
+ 	}
+ 
+ 	return p;
+@@ -696,8 +701,10 @@ static bool br_port_group_equal(struct n
+ 	    !(port->flags & BR_MULTICAST_TO_UNICAST))
+ 		return false;
+ 
++#if 0 // always consider src even if mc to uc is not on
+ 	if (!(p->flags & MDB_PG_FLAGS_MCAST_TO_UCAST))
+ 		return true;
++#endif
+ 
+ 	if (!src)
+ 		return false;
+@@ -745,7 +752,7 @@ static int br_multicast_add_group(struct
+ 	if (unlikely(!p))
+ 		goto err;
+ 	rcu_assign_pointer(*pp, p);
+-	br_mdb_notify(br->dev, port, group, RTM_NEWMDB, 0);
++	br_mdb_notify(br->dev, port, group, RTM_NEWMDB, 0, src);
+ 
+ found:
+ 	mod_timer(&p->timer, now + br->multicast_membership_interval);
+@@ -1527,8 +1534,9 @@ br_multicast_leave_group(struct net_brid
+ 			hlist_del_init(&p->mglist);
+ 			del_timer(&p->timer);
+ 			call_rcu_bh(&p->rcu, br_multicast_free_pg);
++			memcpy(group->src, src, ETH_ALEN);
+ 			br_mdb_notify(br->dev, port, group, RTM_DELMDB,
+-				      p->flags);
++				      p->flags, src);
+ 
+ 			if (!mp->ports && !mp->mglist &&
+ 			    netif_running(br->dev))
+@@ -1613,6 +1621,7 @@ static void br_ip4_multicast_leave_group
+ 
+ 	own_query = port ? &port->ip4_own_query : &br->ip4_own_query;
+ 
++	memcpy(br_group.src, src, ETH_ALEN);
+ 	br_group.u.ip4 = group;
+ 	br_group.proto = htons(ETH_P_IP);
+ 	br_group.vid = vid;
+--- a/include/linux/if_bridge.h
++++ b/include/linux/if_bridge.h
+@@ -26,6 +26,7 @@ struct br_ip {
+ 	} u;
+ 	__be16		proto;
+ 	__u16           vid;
++	unsigned char src[ETH_ALEN];
+ };
+ 
+ struct br_ip_list {
+--- a/net/bridge/br_private.h
++++ b/net/bridge/br_private.h
+@@ -661,7 +661,7 @@ br_multicast_new_port_group(struct net_b
+ void br_mdb_init(void);
+ void br_mdb_uninit(void);
+ void br_mdb_notify(struct net_device *dev, struct net_bridge_port *port,
+-		   struct br_ip *group, int type, u8 flags);
++		   struct br_ip *group, int type, u8 flags, const unsigned char *src);
+ void br_rtr_notify(struct net_device *dev, struct net_bridge_port *port,
+ 		   int type);
+ void br_multicast_count(struct net_bridge *br, const struct net_bridge_port *p,
