@@ -11,9 +11,9 @@ Signed-off-by: Jakob Olsson <jakob.olsson@iopsys.eu>
  include/rpcd/session.h      |   3 +
  include/rpcd/uci_granular.h |  81 ++++++++
  session.c                   |  39 +++-
- uci.c                       | 204 ++++++++++++++++++-
+ uci.c                       | 206 ++++++++++++++++++-
  uci_granular.c              | 385 ++++++++++++++++++++++++++++++++++++
- 6 files changed, 703 insertions(+), 11 deletions(-)
+ 6 files changed, 705 insertions(+), 11 deletions(-)
  create mode 100644 include/rpcd/uci_granular.h
  create mode 100644 uci_granular.c
 
@@ -308,7 +308,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
 +{
 +	int allowed = RPC_OA_NONE;
 +
-+	if (granular_ctx.state == RPC_CA_ALLOWED)
++	if (granular_ctx.state == RPC_CA_ALLOWED || granular_ctx.match_definitions_count == -1)
 +		allowed = RPC_OA_FULL;
 +	else if (granular_ctx.match_definitions_count > 0 && rpc_uci_find_granular_access("*"))
 +		allowed = RPC_OA_SECTION;
@@ -462,7 +462,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  
  	blobmsg_parse(rpc_uci_add_policy, __RPC_A_MAX, tb,
  	              blob_data(msg), blob_len(msg));
-@@ -730,6 +844,22 @@ rpc_uci_add(struct ubus_context *ctx, st
+@@ -730,6 +844,24 @@ rpc_uci_add(struct ubus_context *ctx, st
  		ptr.section = s->e.name;
  	}
  
@@ -479,13 +479,15 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
 +
 +	/* send dummy argument, will get RPC_OA_SECTION or above if full access */
 +	allowed = rpc_uci_check_granular_is_allowed("");
-+	if (allowed < RPC_OA_SECTION)
++	if (allowed < RPC_OA_SECTION) {
++		err = UBUS_STATUS_PERMISSION_DENIED;
 +		goto out;
++	}
 +
  	if (tb[RPC_A_VALUES])
  	{
  		blobmsg_for_each_attr(cur, tb[RPC_A_VALUES], rem)
-@@ -790,12 +920,13 @@ rpc_uci_add(struct ubus_context *ctx, st
+@@ -790,12 +922,13 @@ rpc_uci_add(struct ubus_context *ctx, st
  	if (!err)
  	{
  		uci_save(cursor, p);
@@ -500,7 +502,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  out:
  	uci_unload(cursor, p);
  
-@@ -815,7 +946,7 @@ static int
+@@ -815,7 +948,7 @@ static int
  rpc_uci_merge_set(struct blob_attr *opt, struct uci_ptr *ptr)
  {
  	struct blob_attr *cur;
@@ -509,7 +511,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  
  	ptr->o = NULL;
  	ptr->option = blobmsg_name(opt);
-@@ -827,6 +958,10 @@ rpc_uci_merge_set(struct blob_attr *opt,
+@@ -827,6 +960,10 @@ rpc_uci_merge_set(struct blob_attr *opt,
  	if (rpc_uci_lookup(ptr) || !ptr->s)
  		return UBUS_STATUS_NOT_FOUND;
  
@@ -520,7 +522,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	if (blobmsg_type(opt) == BLOBMSG_TYPE_ARRAY)
  	{
  		if (ptr->o)
-@@ -877,6 +1012,7 @@ rpc_uci_set(struct ubus_context *ctx, st
+@@ -877,6 +1014,7 @@ rpc_uci_set(struct ubus_context *ctx, st
  	struct uci_element *e;
  	struct uci_ptr ptr = { 0 };
  	int rem, rv, err = 0;
@@ -528,7 +530,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  
  	blobmsg_parse(rpc_uci_set_policy, __RPC_S_MAX, tb,
  	              blob_data(msg), blob_len(msg));
-@@ -897,6 +1033,17 @@ rpc_uci_set(struct ubus_context *ctx, st
+@@ -897,6 +1035,17 @@ rpc_uci_set(struct ubus_context *ctx, st
  	if (uci_load(cursor, ptr.package, &p))
  		return rpc_uci_status();
  
@@ -546,7 +548,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	if (tb[RPC_S_SECTION])
  	{
  		ptr.section = blobmsg_data(tb[RPC_S_SECTION]);
-@@ -935,6 +1082,8 @@ rpc_uci_set(struct ubus_context *ctx, st
+@@ -935,6 +1084,8 @@ rpc_uci_set(struct ubus_context *ctx, st
  	if (!err)
  		uci_save(cursor, p);
  
@@ -555,7 +557,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	uci_unload(cursor, p);
  
  	return err ? err : rpc_uci_status();
-@@ -950,11 +1099,18 @@ static int
+@@ -950,11 +1101,18 @@ static int
  rpc_uci_merge_delete(struct blob_attr *opt, struct uci_ptr *ptr)
  {
  	struct blob_attr *cur;
@@ -575,7 +577,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	if (!opt)
  	{
  		ptr->o = NULL;
-@@ -1008,6 +1164,7 @@ rpc_uci_delete(struct ubus_context *ctx,
+@@ -1008,6 +1166,7 @@ rpc_uci_delete(struct ubus_context *ctx,
  	struct uci_package *p = NULL;
  	struct uci_element *e, *tmp;
  	struct uci_ptr ptr = { 0 };
@@ -583,7 +585,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	int err = 0;
  
  	blobmsg_parse(rpc_uci_delete_policy, __RPC_D_MAX, tb,
-@@ -1033,6 +1190,17 @@ rpc_uci_delete(struct ubus_context *ctx,
+@@ -1033,6 +1192,17 @@ rpc_uci_delete(struct ubus_context *ctx,
  	if (uci_load(cursor, ptr.package, &p))
  		return rpc_uci_status();
  
@@ -601,7 +603,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	if (tb[RPC_D_SECTION])
  	{
  		ptr.section = blobmsg_data(tb[RPC_D_SECTION]);
-@@ -1066,6 +1234,8 @@ rpc_uci_delete(struct ubus_context *ctx,
+@@ -1066,6 +1236,8 @@ rpc_uci_delete(struct ubus_context *ctx,
  	if (!err)
  		uci_save(cursor, p);
  
@@ -610,7 +612,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	uci_unload(cursor, p);
  
  	return err ? err : rpc_uci_status();
-@@ -1079,6 +1249,7 @@ rpc_uci_rename(struct ubus_context *ctx,
+@@ -1079,6 +1251,7 @@ rpc_uci_rename(struct ubus_context *ctx,
  	struct blob_attr *tb[__RPC_R_MAX];
  	struct uci_package *p = NULL;
  	struct uci_ptr ptr = { 0 };
@@ -618,7 +620,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  
  	blobmsg_parse(rpc_uci_rename_policy, __RPC_R_MAX, tb,
  	              blob_data(msg), blob_len(msg));
-@@ -1102,6 +1273,21 @@ rpc_uci_rename(struct ubus_context *ctx,
+@@ -1102,6 +1275,21 @@ rpc_uci_rename(struct ubus_context *ctx,
  	if (uci_load(cursor, ptr.package, &p))
  		return rpc_uci_status();
  
@@ -640,7 +642,7 @@ Index: rpcd-2019-06-05-89bfaa42/uci.c
  	if (uci_lookup_ptr(cursor, &ptr, NULL, true))
  		goto out;
  
-@@ -1786,6 +1972,8 @@ int rpc_uci_api_init(struct ubus_context
+@@ -1786,6 +1974,8 @@ int rpc_uci_api_init(struct ubus_context
  	if (!cursor)
  		return UBUS_STATUS_UNKNOWN_ERROR;
  
