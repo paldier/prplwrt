@@ -3,6 +3,7 @@
 choice
 	prompt "GCC compiler Version" if TOOLCHAINOPTS
 	default GCC_USE_VERSION_8 if arc
+	default GCC_USE_VERSION_5 if TARGET_ipq
 	default GCC_USE_VERSION_7
 	help
 	  Select the version of gcc you wish to use.
@@ -14,9 +15,11 @@ choice
 	config GCC_USE_VERSION_7
 		bool "gcc 7.x"
 		depends on !arc
+		depends on !TARGET_ipq
 
 	config GCC_USE_VERSION_8
 		bool "gcc 8.x"
+		depends on !TARGET_ipq
 endchoice
 
 config GCC_USE_GRAPHITE
