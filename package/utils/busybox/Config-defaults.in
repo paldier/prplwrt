@@ -771,7 +771,7 @@ config BUSYBOX_DEFAULT_FEATURE_SPLIT_FANCY
 	default n
 config BUSYBOX_DEFAULT_STAT
 	bool
-	default n
+	default y
 config BUSYBOX_DEFAULT_FEATURE_STAT_FORMAT
 	bool
 	default n
