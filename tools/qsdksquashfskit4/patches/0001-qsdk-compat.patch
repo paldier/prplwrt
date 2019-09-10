@@ -1,0 +1,33 @@
+From eb91b490aecec490b90c81f92494f0a07456763c Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Tue, 10 Sep 2019 20:39:36 +0200
+Subject: [PATCH] qsdk compat
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ squashfs-tools/lzma_xz_options.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/squashfs-tools/lzma_xz_options.h b/squashfs-tools/lzma_xz_options.h
+index e40f536..c84d80e 100644
+--- a/squashfs-tools/lzma_xz_options.h
++++ b/squashfs-tools/lzma_xz_options.h
+@@ -36,7 +36,6 @@
+ #endif
+ 
+ struct lzma_opts {
+-	uint32_t dict_size;
+ 	uint32_t flags;
+ #define LZMA_OPT_FLT_MASK	0xffff
+ #define LZMA_OPT_PRE_OFF	16
+@@ -50,6 +49,7 @@ struct lzma_opts {
+ #define LZMA_OPT_PB_OFF		6
+ #define LZMA_OPT_PB_MASK	(0x7 << LZMA_OPT_PB_OFF)
+ 	uint16_t fb;
++	uint32_t dict_size;
+ };
+ 
+ #if __BYTE_ORDER == __BIG_ENDIAN
+-- 
+2.20.1
+
