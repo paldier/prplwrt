@@ -659,6 +659,20 @@ sub install_profiles {
 	closedir(DIR);
 }
 
+sub install_dl {
+	my $feed = shift;
+	my $dir = sprintf('feeds/%s/dl/', $feed->[1]);
+
+	-d "./dl" or mkdir "./dl" or return 1;
+
+	opendir (DIR, $dir) or return 0;
+	while (my $file = readdir(DIR)) {
+		next unless (-f "$dir/$file");
+		-e "./dl/$file" or system("ln -s ../feeds/$feed->[1]/dl/$file ./dl/");
+	}
+	closedir(DIR);
+}
+
 sub install {
 	my $name;
 	my %opts;
@@ -692,6 +706,7 @@ sub install {
 					get_feed($f->[1]);
 				}
 				install_profiles($f);
+				install_dl($f);
 			}
 		}
 	} else {
