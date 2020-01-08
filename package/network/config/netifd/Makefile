@@ -41,6 +41,9 @@ define Package/netifd/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/netifd $(1)/sbin/
 	$(CP) ./files/* $(1)/
 	$(CP) $(PKG_BUILD_DIR)/scripts/* $(1)/lib/netifd/
+ifneq ($(CONFIG_TARGET_intel_mips),)
+	rm $(1)/lib/netifd/netifd-wireless.sh
+endif
 endef
 
 $(eval $(call BuildPackage,netifd))

@@ -87,10 +87,20 @@ endef
 define Device/11acnas
   DTS := 11ACNAS
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
+  UIMAGE_NAME := 11AC-NAS-Router(0.0.0)
   DEVICE_TITLE := WeVO 11AC NAS Router
   DEVICE_PACKAGES := kmod-mt7603 kmod-mt76x2 kmod-usb3 kmod-usb-ledtrig-usbport wpad-basic
 endef
 TARGET_DEVICES += 11acnas
+
+define Device/alfa-network_quad-e4g
+  DTS := QUAD-E4G
+  IMAGE_SIZE := 16064k
+  DEVICE_TITLE := ALFA Network Quad-E4G
+  DEVICE_PACKAGES := kmod-ata-core kmod-ata-ahci kmod-sdhci-mt7620 kmod-usb3 \
+	uboot-envtools
+endef
+TARGET_DEVICES += alfa-network_quad-e4g
 
 define Device/asus_rt-ac57u
   DTS := RT-AC57U
@@ -105,7 +115,7 @@ define Device/dir-860l-b1
   DTS := DIR-860L-B1
   BLOCKSIZE := 64k
   SEAMA_SIGNATURE := wrgac13_dlink.2013gui_dir860lb
-  KERNEL := kernel-bin | patch-dtb | relocate-kernel | lzma | uImage lzma
+  KERNEL := kernel-bin | append-dtb | relocate-kernel | lzma | uImage lzma
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
   DEVICE_TITLE := D-Link DIR-860L B1
   DEVICE_PACKAGES := kmod-mt76x2 kmod-usb3 kmod-usb-ledtrig-usbport wpad-basic
@@ -509,6 +519,7 @@ TARGET_DEVICES += vr500
 define Device/w2914nsv2
   DTS := W2914NSV2
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
+  UIMAGE_NAME := W2914NS-V2(0.0.0)
   DEVICE_TITLE := WeVO W2914NS v2
   DEVICE_PACKAGES := \
 	kmod-mt7603 kmod-mt76x2 kmod-usb3 kmod-usb-ledtrig-usbport wpad-basic

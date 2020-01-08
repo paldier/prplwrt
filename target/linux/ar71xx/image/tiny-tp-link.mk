@@ -164,6 +164,7 @@ define Device/tl-wa750re-v1
   BOARDNAME := TL-WA750RE
   DEVICE_PROFILE := TLWA750
   TPLINK_HWID := 0x07500001
+  DEFAULT := n
 endef
 TARGET_DEVICES += tl-wa750re-v1
 
@@ -235,6 +236,7 @@ define Device/tl-wa850re-v1
   BOARDNAME := TL-WA850RE
   DEVICE_PROFILE := TLWA850
   TPLINK_HWID := 0x08500001
+  DEFAULT := n
 endef
 TARGET_DEVICES += tl-wa850re-v1
 
@@ -249,6 +251,7 @@ define Device/tl-wa850re-v2
   TPLINK_HWREV := 0
   IMAGE_SIZE := 3648k
   MTDPARTS := spi0.0:128k(u-boot)ro,1344k(kernel),2304k(rootfs),256k(config)ro,64k(art)ro,3648k@0x20000(firmware)
+  DEFAULT := n
 endef
 TARGET_DEVICES += tl-wa850re-v2
 
@@ -262,6 +265,7 @@ define Device/tl-wa855re-v1
   TPLINK_HWREV := 0
   IMAGE_SIZE := 3648k
   MTDPARTS := spi0.0:128k(u-boot)ro,1344k(kernel),2304k(rootfs),256k(config)ro,64k(art)ro,3648k@0x20000(firmware)
+  DEFAULT := n
 endef
 TARGET_DEVICES += tl-wa855re-v1
 

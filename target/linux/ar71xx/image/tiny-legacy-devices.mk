@@ -105,16 +105,19 @@ LEGACY_DEVICES += WNR2000V3
 define LegacyDevice/WNR2000V4
   DEVICE_TITLE := NETGEAR WNR2000V4
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-ledtrig-usbport
+  DEFAULT := n
 endef
 LEGACY_DEVICES += WNR2000V4
 
 define LegacyDevice/REALWNR612V2
   DEVICE_TITLE := NETGEAR WNR612V2
+  DEFAULT := n
 endef
 LEGACY_DEVICES += REALWNR612V2
 
 define LegacyDevice/N150R
   DEVICE_TITLE := On Networks N150
+  DEFAULT := n
 endef
 LEGACY_DEVICES += N150R
 
