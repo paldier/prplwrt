@@ -1,0 +1,61 @@
+From 2a330523ca0755f475c968d285b888605621cf1c Mon Sep 17 00:00:00 2001
+From: Daniel Danzberger <daniel@dd-wrt.com>
+Date: Thu, 8 Nov 2018 21:35:55 +0100
+Subject: [PATCH] Add uclient_strerror.
+
+Signed-off-by: Daniel Danzberger <daniel@dd-wrt.com>
+---
+ uclient.c | 20 ++++++++++++++++++++
+ uclient.h |  2 ++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/uclient.c b/uclient.c
+index 1137168..9f98cbc 100644
+--- a/uclient.c
++++ b/uclient.c
+@@ -422,3 +422,23 @@ void __hidden uclient_backend_reset_state(struct uclient *cl)
+ 	cl->error_code = 0;
+ 	uloop_timeout_cancel(&cl->timeout);
+ }
++
++const char * uclient_strerror(unsigned err)
++{
++	switch (err) {
++	case UCLIENT_ERROR_UNKNOWN:
++		return "unknown error";
++	case UCLIENT_ERROR_CONNECT:
++		return "connect failed";
++	case UCLIENT_ERROR_TIMEDOUT:
++		return "timeout";
++	case UCLIENT_ERROR_SSL_INVALID_CERT:
++		return "ssl invalid cert";
++	case UCLIENT_ERROR_SSL_CN_MISMATCH:
++		return "ssl cn mismatch";
++	case UCLIENT_ERROR_MISSING_SSL_CONTEXT:
++		return "missing ssl context";
++	default:
++		return "invalid error code";
++	}
++}
+diff --git a/uclient.h b/uclient.h
+index e3695db..4f37364 100644
+--- a/uclient.h
++++ b/uclient.h
+@@ -36,6 +36,7 @@ enum uclient_error_code {
+ 	UCLIENT_ERROR_SSL_INVALID_CERT,
+ 	UCLIENT_ERROR_SSL_CN_MISMATCH,
+ 	UCLIENT_ERROR_MISSING_SSL_CONTEXT,
++	__UCLIENT_ERROR_MAX
+ };
+ 
+ union uclient_addr {
+@@ -126,5 +127,6 @@ int uclient_http_redirect(struct uclient *cl);
+ int uclient_http_set_ssl_ctx(struct uclient *cl, const struct ustream_ssl_ops *ops,
+ 			     struct ustream_ssl_ctx *ctx, bool require_validation);
+ int uclient_http_set_address_family(struct uclient *cl, int af);
++const char *uclient_strerror(unsigned err);
+ 
+ #endif
+-- 
+2.20.1
+

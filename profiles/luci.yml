@@ -1,0 +1,32 @@
+---
+description: Add the luci WebUI
+packages:
+  - cgi-io
+  - libiwinfo
+  - libiwinfo-lua
+  - liblua
+  - liblucihttp
+  - liblucihttp-lua
+  - libubus-lua
+  - lua
+  - luci
+  - luci-app-firewall
+  - luci-app-opkg
+  - luci-base
+  - luci-lib-ip
+  - luci-lib-jsonc
+  - luci-lib-nixio
+  - luci-mod-admin-full
+  - luci-mod-network
+  - luci-mod-status
+  - luci-mod-system
+  - luci-proto-ipv6
+  - luci-proto-ppp
+  - luci-theme-bootstrap
+  - rpcd
+  - rpcd-mod-file
+  - rpcd-mod-iwinfo
+  - rpcd-mod-luci
+  - rpcd-mod-rrdns
+  - uhttpd
+

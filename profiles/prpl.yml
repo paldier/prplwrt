@@ -1,0 +1,16 @@
+---
+description: Add the prpl features
+feeds:
+  - name: feed_prpl
+    uri: https://git.prpl.dev/prplmesh/feed-prpl.git
+    branch: prpl-19.07
+
+packages:
+  - prplmesh-dwpal
+  - prplmesh-nl80211
+  - obuspa
+  - owsd
+  - u80211d
+  - ucwmp
+  - umdns
+  - uspd

@@ -1,0 +1,17 @@
+---
+profiles:
+ - Default
+target: mediatek
+subtarget: mt7622
+external_target: True
+description: Build image for the Mediatek MT7622
+feeds:
+  - name: feed_mediatek
+    uri: https://git.prpl.dev/prplwrt/feed-mediatek.git
+    branch: mediatek-19.07
+  - name: feed_wifi
+    uri: https://git.prpl.dev/prplwrt/feed-wifi.git
+    branch: wifi-master
+packages:
+  - kmod-mt7615e
+  - mt7622bt-firmware

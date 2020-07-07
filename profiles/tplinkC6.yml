@@ -1,0 +1,6 @@
+---
+profiles:
+  - tplink_archer-c6-v2
+target: ath79
+subtarget: generic
+description: Build image for the TP-Link Archer C6
