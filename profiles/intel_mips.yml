@@ -1,6 +1,7 @@
 ---
 profiles:
   - NETGEAR_RAX40
+  - TPLINK_XDR3020
   - AX6000_2000_ETH_11AXUCI
 target: intel_mips
 subtarget: xrx500
