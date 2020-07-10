@@ -1,0 +1,18 @@
+---
+profiles:
+  - wave500 ac prebuild files and ax images
+target: intel_mips
+subtarget: xrx500
+external_target: True
+description: Build images for the Intel MIPS devices - wave500
+feeds:
+  - name: wav500_prebuild
+    uri: https://github.com/paldier/wav500_prebuild.git
+  - name: wav500_ax_image
+    uri: https://github.com/paldier/wav500_ax_image.git
+
+packages:
+  - ltq-wlan-wave_5_x_pre
+  - ltq-wlan-wave_5_x-rflib_pre
+  - kmod-Lantiq-wlan-wave-support-5_x
+  - wav500_ax_image

@@ -1,6 +1,9 @@
 
 ./scripts/gen_config.py intel_mips prpl webui luci debug
 
+cd package/feeds/luci
+ln -sf ../../../feeds/luci/collections/luci ./
+
 make
 
 
