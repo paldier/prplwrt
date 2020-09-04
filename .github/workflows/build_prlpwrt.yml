@@ -40,7 +40,9 @@ jobs:
           ln -sf ../../../feeds/luci/collections/luci ./
           
       - name: Build
-        run: make
+        run: |
+          cd prplwrt
+          make
 
       - name: Upload entire bin directory
         uses: actions/upload-artifact@master
