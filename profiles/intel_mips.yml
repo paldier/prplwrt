@@ -3,12 +3,12 @@ profile: NETGEAR_RAX40
 target: intel_mips
 subtarget: xrx500
 external_target: True
-description: Build image for the Netgear RAX40
+description: Build image for the Intel GRX350/GRX550 
 feeds:
   - name: feed_intel
     uri: https://github.com/paldier/feed-intel.git
     tracking_branch: ugw-8.4.2-cleanup
-    revision: 447d2e07fdf7c3301350c9433a54dc09a31204a0
+    revision: 0030760c52cb229698bb8e0951bb4ba0fe4adad6
   - name: feed_prpl
     uri: https://gitlab.com/prpl-foundation/prplwrt/feed-prpl.git
     tracking_branch: prpl-19.07
