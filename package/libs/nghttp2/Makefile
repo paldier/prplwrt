@@ -28,8 +28,7 @@ define Package/libnghttp2/description
 endef
 
 CMAKE_OPTIONS += \
-        -DENABLE_LIB_ONLY=ON \
-        -DENABLE_STATIC_LIB=ON
+        -DENABLE_LIB_ONLY=ON
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include/nghttp2
@@ -42,7 +41,6 @@ endef
 define Package/libnghttp2/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libnghttp2.so.* $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libnghttp2.a $(1)/usr/lib
 endef
 
 $(eval $(call BuildPackage,libnghttp2))

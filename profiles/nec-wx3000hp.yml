@@ -1,18 +1,46 @@
 ---
-profile: NETGEAR_RAX40
+profiles:
+  - AX3000_1600_ETH_11AXUCI_ASURADA
 target: intel_mips
 subtarget: xrx500
 external_target: True
-description: Build image for the Netgear RAX40
+description: Build images for the Intel MIPS AxePoint3000 device
 feeds:
-  - name: feed_intel
-    uri: https://github.com/paldier/feed-intel.git
-    tracking_branch: ugw-8.4.2-cleanup
-    revision: 447d2e07fdf7c3301350c9433a54dc09a31204a0
+  - name: feed_target_mips
+    uri: https://gitlab.com/prpl-foundation/intel/feed_target_mips.git
+    tracking_branch: ugw-8.4.1-cleanup
+    revision: a8424e41823728f9c4a9fb8f7eed7e931761a791
+  - name: feed_datapath
+    uri: https://gitlab.com/prpl-foundation/intel/feed_datapath.git
+    tracking_branch: ugw-8.4.1-cleanup
+    revision: c70dd031c69555a91201c4b42e3f4a37a033d9a4
+  - name: feed_ppa
+    uri: https://gitlab.com/prpl-foundation/intel/feed_ppa.git
+    tracking_branch: ugw-8.4.1-cleanup
+    revision: 8d633a4820a43548ca0d43c92161838d2e7d5b4d
+  - name: feed_gphy_firmware
+    uri: https://gitlab.com/prpl-foundation/intel/feed_gphy_firmware.git
+    tracking_branch: ugw-8.4.1-cleanup
+    revision: 5fc17352145039f1f07f0746b42d0ef968f0905e
+  - name: feed_switch_api
+    uri: https://gitlab.com/prpl-foundation/intel/feed_switch_api.git
+    tracking_branch: ugw-8.4.1-cleanup
+    revision: d6321c7e959e510138a3c3a4cd44eff3d1ee3a93
+  - name: feed_wlan_6x
+    uri: https://gitlab.com/prpl-foundation/intel/feed_wlan_6x.git
+    tracking_branch: ugw-8.4.1-cleanup-prplmesh
+    revision: 621bc5b5ba95f84deec4271d0d4e170495335a61
   - name: feed_prpl
     uri: https://gitlab.com/prpl-foundation/prplwrt/feed-prpl.git
-    tracking_branch: prpl-19.07
-    revision: 63dcf92dbaab544e98a17879b56262b2f3009751
+    tracking_branch: prplmesh/prpl-19.07
+    revision: 3cbf6d1e7b28291335c79b2c26d42f08065939d3
+  - name: feed_opensource_apps
+    uri: https://gitlab.com/prpl-foundation/intel/feed_opensource_apps.git
+    tracking_branch: ugw-8.4.1-cleanup-prplmesh
+    revision: f22c4f0b1d594598b1d38298fba513e5948dd1e4
+  - name: feed_pending
+    uri: https://gitlab.com/prpl-foundation/intel/feed-pending.git
+    revision: be44f079c9ed74e827de882608666355916ec0f8
 
 packages:
   - dwpal_6x-uci
@@ -79,19 +107,19 @@ packages:
   - ltq-wlan-wave_6x-uci
   - nand-utils
   - ppacmd
+  - safeclibs
   - safeclibs3
   - switch_cli_ugw8
   - swpal_6x-uci
   - terminfo
   - uuidgen
+  - tcpdump
 
 diffconfig: |
-  CONFIG_BUILD_LOG=y
   CONFIG_DEVEL=y
   CONFIG_KERNEL_GIT_CLONE_URI="https://gitlab.com/prpl-foundation/intel/linux.git"
-  CONFIG_KERNEL_GIT_DEPTH=""
-  CONFIG_KERNEL_GIT_REF="6739058ba9404ab82b6e06b5bff9f89cc9df3656"
-  CONFIG_KERNEL_GIT_MIRROR_HASH="89b3bdec22f358826459a66ed14ccaad7697b1b313620048bb649ec974104fd1"
+  CONFIG_KERNEL_GIT_DEPTH="1000"
+  CONFIG_KERNEL_GIT_REF="727acdb060410a936330a2456f641b9473bf5121"
   CONFIG_LTQ_SWITCH_CLI_UGW8_HELP_PRINTOUT=y
   CONFIG_OPENSSL_ENGINE=y
   CONFIG_OPENSSL_PREFER_CHACHA_OVER_GCM=y

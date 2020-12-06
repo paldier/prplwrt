@@ -1,0 +1,11 @@
+---
+profile: ls1043ardb
+target: layerscape
+subtarget: armv8_64b
+description: Build image for the NXP LS1043
+feeds:
+  - name: feed_wifi
+    uri: https://gitlab.com/prpl-foundation/prplwrt/feed-wifi.git
+    tracking_branch: wifi-master
+    revision: b9d10230f8529fe9b6b2031a3aea4f4903421cb0
+

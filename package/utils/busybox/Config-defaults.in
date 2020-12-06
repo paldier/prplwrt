@@ -234,7 +234,7 @@ config BUSYBOX_DEFAULT_FEATURE_EDITING_SAVE_ON_EXIT
 	default n
 config BUSYBOX_DEFAULT_FEATURE_REVERSE_SEARCH
 	bool
-	default y
+	default n
 config BUSYBOX_DEFAULT_FEATURE_TAB_COMPLETION
 	bool
 	default y
@@ -2954,7 +2954,7 @@ config BUSYBOX_DEFAULT_HUSH_INTERACTIVE
 	default n
 config BUSYBOX_DEFAULT_HUSH_SAVEHISTORY
 	bool
-	default y
+	default n
 config BUSYBOX_DEFAULT_HUSH_JOB
 	bool
 	default n

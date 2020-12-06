@@ -4,8 +4,8 @@ import yaml
 from pathlib import Path
 from shutil import rmtree
 import sys
-from subprocess import run, DEVNULL
-from os import getenv, listdir, path
+from subprocess import run
+from os import getenv
 
 profile_folder = Path(getenv("PROFILES", "./profiles"))
 
@@ -28,12 +28,10 @@ def usage(code: int = 0):
     print(
         f"""Usage: {sys.argv[0]} <profile> [options...]
 
-    clean           Remove feeds before setup
-    list            List available profiles
-    defconfig       Run make defconfig after setup"""
+    clean           Cleanup feeds related parts in the tree and exit.
+    list            List available profiles"""
     )
     quit(code)
-
 
 def load_yaml(fname: str, profile: dict):
     profile_file = (profile_folder / fname).with_suffix(".yml")
@@ -43,25 +41,22 @@ def load_yaml(fname: str, profile: dict):
 
     new = yaml.safe_load(profile_file.read_text())
     for n in new:
-        if n in {"target", "subtarget", "external_target"}:
+        if n in {"profile", "target", "subtarget", "external_target"}:
             if profile.get(n):
                 die(f"Duplicate tag found {n}")
-            profile.update({n: new.get(n)})
+            profile.update({n:new.get(n)})
         elif n in {"description"}:
             profile["description"].append(new.get(n))
         elif n in {"packages"}:
             profile["packages"].extend(new.get(n))
-        elif n in {"profiles"}:
-            profile["profiles"].extend(new.get(n))
         elif n in {"diffconfig"}:
             profile["diffconfig"] += new.get(n)
         elif n in {"feeds"}:
             for f in new.get(n):
                 if f.get("name", "") == "" or f.get("uri", "") == "":
-                    die(f"Found bad feed {f}")
+                     die(f"Found bad feed {f}")
                 profile["feeds"][f.get("name")] = f
     return profile
-
 
 if "list" in sys.argv:
     print(f"Profiles in {profile_folder}")
@@ -88,7 +83,7 @@ if "clean" in sys.argv:
     print("Tree is now clean")
     quit(0)
 
-profile = {"profiles": [], "packages": [], "description": [], "diffconfig": "", "feeds": {}}
+profile = {"packages":[], "description": [],"diffconfig":"", "feeds":{}}
 
 for p in sys.argv[1:]:
     profile = load_yaml(p, profile)
@@ -103,23 +98,25 @@ if feeds_conf.is_file():
     feeds_conf.unlink()
 
 feeds = []
+
+with open("feeds.conf.default", "r") as default_feeds:
+    for line in default_feeds:
+        feed = line.rstrip()
+        print(f"Adding default feed '{feed}'")
+        feeds.append(feed.replace(" ", ","))
+
 for p in profile.get("feeds", []):
     try:
         f = profile["feeds"].get(p)
-        if all(k in f for k in ("branch", "hash")):
-            die(f"Please specify either a branch or a hash, not both: {f}")
-        if "hash" in f:
-            feeds.append(
-                f'{f.get("method", "src-git")},{f["name"]},{f["uri"]}^{f.get("hash")}'
-            )
-        else:
-            feeds.append(
-                f'{f.get("method", "src-git")},{f["name"]},{f["uri"]};{f.get("branch", "master")}'
-            )
+        if not "revision" in f:
+            die(f"Please specify revision for the following feed: {f}")
+        feeds.append(
+            f'{f.get("method", "src-git")},{f["name"]},{f["uri"]}^{f.get("revision")}'
+        )
     except:
         print(f"Badly configured feed: {f}")
 
-if run(["./scripts/feeds", "setup", "-b", *feeds]).returncode:
+if run(["./scripts/feeds", "setup", *feeds]).returncode:
     die(f"Error setting up feeds")
 
 if run(["./scripts/feeds", "update"]).returncode:
@@ -127,12 +124,7 @@ if run(["./scripts/feeds", "update"]).returncode:
 
 for p in profile.get("feeds", []):
     f = profile["feeds"].get(p)
-    packages = [p for p in listdir(
-        f"feeds/{f['name']}") if not p.startswith('.')]
-
-    for package in packages:
-        run(["./scripts/feeds", "uninstall", package])
-    if run(["./scripts/feeds", "install", "-a", "-f", "-p", f.get("name")], stdout=DEVNULL, stderr=DEVNULL).returncode:
+    if run(["./scripts/feeds", "install", "-a", "-f", "-p", f.get("name")]).returncode:
         die(f"Error installing {feed}")
 
 if profile.get("external_target", False):
@@ -140,14 +132,9 @@ if profile.get("external_target", False):
         die(f"Error installing external target {profile['target']}")
 
 config_output = f"""CONFIG_TARGET_{profile["target"]}=y
-CONFIG_TARGET_{profile["target"]}_{profile["subtarget"]}=y\n"""
-profiles = profile.get("profiles")
-if len(profiles) > 1:
-    config_output += f"CONFIG_TARGET_MULTI_PROFILE=y\n"
-    for p in profiles:
-        config_output += f"""CONFIG_TARGET_DEVICE_{profile["target"]}_{profile["subtarget"]}_DEVICE_{p}=y\n"""
-else:
-    config_output += f"""CONFIG_TARGET_{profile["target"]}_{profile["subtarget"]}_DEVICE_{profiles[0]}=y\n"""
+CONFIG_TARGET_{profile["target"]}_{profile["subtarget"]}=y
+CONFIG_TARGET_{profile["target"]}_{profile["subtarget"]}_DEVICE_{profile["profile"]}=y
+"""
 
 config_output += f"{profile.get('diffconfig', '')}"
 

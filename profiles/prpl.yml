@@ -2,12 +2,11 @@
 description: Add the prpl features
 feeds:
   - name: feed_prpl
-    uri: https://github.com/paldier/feed-prpl.git
-    branch: prpl-19.07
+    uri: https://gitlab.com/prpl-foundation/prplwrt/feed-prpl.git
+    tracking_branch: prpl-19.07
+    revision: 9dc5664f501e31335cf78c2cfa6d9c140dae353f
 
 packages:
-  - prplmesh-dwpal
-  - prplmesh-nl80211
   - obuspa
   - owsd
   - u80211d
