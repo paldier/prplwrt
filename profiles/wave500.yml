@@ -6,7 +6,7 @@ feeds:
   - name: wav500_ax_image
     uri: https://github.com/paldier/wav500_ax_image.git
     tracking_branch: master
-    revision: 588dbdb8e4c7fefe7b49c2723dac590f7cb8fbfd
+    revision: 803b57518a922a61e90e3a2e7411d01d43b7fb83
 
 packages:
 #  - ltq-wlan-wave_5_x_pre
