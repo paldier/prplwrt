@@ -1,15 +1,21 @@
 ---
-description: Build images for the Intel MIPS devices - wave500
-feeds:
-#  - name: wav500_prebuild
-#    uri: https://github.com/paldier/wav500_prebuild.git
-  - name: wav500_ax_image
-    uri: https://github.com/paldier/wav500_ax_image.git
-    tracking_branch: master
-    revision: 803b57518a922a61e90e3a2e7411d01d43b7fb83
+#description: Build images for the Intel MIPS devices - wave500
+#feeds:
+#  - name: wav500_driver_bin
+#    uri: https://github.com/paldier/wav500_driver_bin.git
+#    tracking_branch: master
+#    revision: 7bc8993a1fb3746268d99658f6ab28f706f59a6f
+#  - name: wav500_ax_image
+#    uri: https://github.com/paldier/wav500_ax_image.git
+#    tracking_branch: master
+#    revision: 803b57518a922a61e90e3a2e7411d01d43b7fb83
+#  - name: wav500_driver
+#    uri: https://github.com/paldier/wav500_driver.git
+#    tracking_branch: master
+#    revision: 0ab83d9db298ba7c0b237190ba02d1a3a0f7022d
 
-packages:
-#  - ltq-wlan-wave_5_x_pre
-#  - ltq-wlan-wave_5_x-rflib_pre
-#  - kmod-Lantiq-wlan-wave-support-5_x
-  - wav500_ax_image
+#packages:
+#  - ltq-wlan-wave_5_x
+#  - ltq-wlan-wave_5_x-rflib
+#  - kmod-lantiq-wlan-wave-support_5_x
+#  - wav500_ax_image
