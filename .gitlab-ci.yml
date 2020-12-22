@@ -6,18 +6,26 @@ include:
   - local: .gitlab/docker/sdk/gitlab.yml
   - local: .gitlab/testbed.yml
   - local: .gitlab/testbed/netgear-rax40.yml
+  - local: .gitlab/testbed/tplink-c6v2.yml
 
 stages:
   - docker
+  - docker test
+  - docker deploy
   - build
   - docker SDK
+  - docker SDK test
+  - docker SDK deploy
   - run
 
 build test intel_mips prpl webui:
   extends: .build test config
   variables:
     CI_BUILD_CONFIG_EXTRA: >
-      +BUILD_LOG +SDK +PACKAGE_prplmesh-dwpal
+      +BUILD_LOG +SDK
+
+build test tplinkC6 prpl webui:
+  extends: .build test config
 
 run test Netgear RAX40 with system on NAND:
   dependencies:
@@ -26,3 +34,11 @@ run test Netgear RAX40 with system on NAND:
   variables:
     LABGRID_TARGET: "$DUT_BOARD-nand"
     TFTP_IMAGE_FILENAME: NETGEAR_RAX40-squashfs-fullimage.img
+
+run test TP-Link Archer C6v2 with system on initramfs:
+  dependencies:
+    - build test tplinkC6 prpl webui
+  extends: .tplink-c6v2 testbed
+  variables:
+    LABGRID_TARGET: "$DUT_BOARD-initramfs"
+    TFTP_IMAGE_FILENAME: openwrt-ath79-generic-tplink_archer-c6-v2-initramfs-kernel.bin

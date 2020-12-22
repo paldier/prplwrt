@@ -71,7 +71,7 @@ if len(sys.argv) < 2:
     usage(1)
 
 #rmtree("./tmp", ignore_errors=True)
-#rmtree("./packages/feeds/", ignore_errors=True)
+#mtree("./packages/feeds/", ignore_errors=True)
 #rmtree("./feeds", ignore_errors=True)
 #rmtree("./tmp", ignore_errors=True)
 if Path("./feeds.conf").is_file():
