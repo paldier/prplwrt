@@ -12,7 +12,7 @@
 #  - name: wav500_driver
 #    uri: https://github.com/paldier/wav500_driver.git
 #    tracking_branch: master
-#    revision: 0ab83d9db298ba7c0b237190ba02d1a3a0f7022d
+#    revision: a0a3fb6e7a05b00acf890df141f955d41db64435
 
 #packages:
 #  - ltq-wlan-wave_5_x
