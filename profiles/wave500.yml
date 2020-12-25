@@ -1,6 +1,6 @@
 ---
-#description: Build images for the Intel MIPS devices - wave500
-#feeds:
+description: Build images for the Intel MIPS devices - wave500
+feeds:
 #  - name: wav500_driver_bin
 #    uri: https://github.com/paldier/wav500_driver_bin.git
 #    tracking_branch: master
@@ -13,6 +13,9 @@
 #    uri: https://github.com/paldier/wav500_driver.git
 #    tracking_branch: master
 #    revision: a0a3fb6e7a05b00acf890df141f955d41db64435
+  - name: helloworld
+    uri: https://github.com/fw876/helloworld.git
+    tracking_branch: master
 
 #packages:
 #  - ltq-wlan-wave_5_x
