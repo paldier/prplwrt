@@ -12,7 +12,7 @@ feeds:
 #  - name: wav500_driver
 #    uri: https://github.com/paldier/wav500_driver.git
 #    tracking_branch: master
-#    revision: a0a3fb6e7a05b00acf890df141f955d41db64435
+#    revision: 4bf773f4adf6050c8f7154983e2cb87db209fa9c
   - name: helloworld
     uri: https://github.com/fw876/helloworld.git
     tracking_branch: master
