@@ -15,7 +15,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -35,32 +35,15 @@ jobs:
         run: |
           git clone https://github.com/paldier/prplwrt
           cd prplwrt
-          ./scripts/gen_config.py intel_mips prpl webui luci 
+          ./scripts/gen_config.py intel_mips prpl webui luci wav500
           cd package/feeds/luci
           ln -sf ../../../feeds/luci/collections/luci ./
+          cd ../../../
+          rm .config
+          cp k3c.config .config
           
       - name: Build
         run: |
           cd prplwrt
           make
 
-      - name: Upload entire bin directory
-        uses: actions/upload-artifact@master
-        if: always()
-        with:
-          name: prlpwrt-bin-dictionary
-          path: prlpwrt/bin
-
-      - name: Setup Upload dictionary
-        if: always()
-        run: |
-          cd prlpwrt/bin/targets/*/*
-          rm -rf packages
-          echo "::set-env name=FIRMWARE::$(pwd)"
-
-      - name: Only Upload firmware (Without packages)
-        uses: actions/upload-artifact@master
-        if: always()
-        with:
-          name: prlpwrt
-          path: ${{ env.FIRMWARE }}
