@@ -4,7 +4,7 @@ feeds:
   - name: wav500_driver_bin
     uri: https://gitlab.com/paldier/wav500_driver_bin.git
     tracking_branch: main
-    revision: ab64d4a332b0fb80618793b99f759838bc92f139
+    revision: c499a0ac21ad1e8d5bab3e02e882a92164d6d677
 #  - name: wav500_ax_image
 #    uri: https://github.com/paldier/wav500_ax_image.git
 #    tracking_branch: master
@@ -12,7 +12,7 @@ feeds:
 #  - name: wav500_driver
 #    uri: https://github.com/paldier/wav500_driver.git
 #    tracking_branch: master
-#    revision: 4bf773f4adf6050c8f7154983e2cb87db209fa9c
+#    revision: a9f1cf5fa705588492ea79b2d44b53d29b6972c0
   - name: helloworld
     uri: https://github.com/fw876/helloworld.git
     tracking_branch: master

@@ -1,5 +1,6 @@
 ---
-profile: linksys_wrt32x
+profiles: 
+ - linksys_wrt32x
 target: mvebu
 subtarget: cortexa9
 description: Build image for the Linksys WRT3200ACM

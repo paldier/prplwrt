@@ -1,9 +1,12 @@
 ---
-profile: NETGEAR_RAX40
+profiles:
+  - NETGEAR_RAX40
+  - AX6000_2000_ETH_11AXUCI
+  - AX3000_1600_ETH_11AXUCI_ASURADA
 target: intel_mips
 subtarget: xrx500
 external_target: True
-description: Build image for the Intel GRX350/GRX550 
+description: Build images for the Intel MIPS devices - Netgear RAX40, AxePoint and Asurada
 feeds:
   - name: feed_intel
     uri: https://github.com/paldier/feed-intel.git
@@ -103,4 +106,3 @@ diffconfig: |
   CONFIG_OPENSSL_WITH_PSK=y
   CONFIG_OPENSSL_WITH_SRP=y
   CONFIG_OPENSSL_WITH_TLS13=y
-

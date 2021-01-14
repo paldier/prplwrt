@@ -1,5 +1,6 @@
 ---
-profile: ls1043ardb
+profiles: 
+  - ls1043ardb
 target: layerscape
 subtarget: armv8_64b
 description: Build image for the NXP LS1043

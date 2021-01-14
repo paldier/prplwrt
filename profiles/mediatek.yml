@@ -1,5 +1,6 @@
 ---
-profile: Default
+profiles:
+ - Default
 target: mediatek
 subtarget: mt7622
 external_target: True
